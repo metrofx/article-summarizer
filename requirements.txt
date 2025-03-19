@@ -1,0 +1,9 @@
+# requirements.txt
+fastapi
+uvicorn
+requests
+trafilatura
+python-dotenv
+pydantic
+
+streamlit
