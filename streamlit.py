@@ -17,19 +17,27 @@ def fetch_article_data(url):
 def main():
     st.set_page_config(page_title="Article Analyzer", layout="wide")
 
-    # URL input
-    url = st.text_input("Enter article URL:")
-    analyze_button = st.button("Analyze", type="primary")
+    # Create two columns for URL input and Analyze button
+    col1, col2 = st.columns([6, 1])  # 6:1 ratio for URL field:button
+
+    # URL input and button in the same row
+    with col1:
+        url = st.text_input("", placeholder="Enter article URL:", label_visibility="collapsed")
+    with col2:
+        analyze_button = st.button("Analyze", type="primary")
 
     if url and analyze_button:
         data = fetch_article_data(url)
 
         if data:
-            metadata = data['og_metadata']
-            st.header(metadata['title'])
-
-            # Source information
-            st.write(f"**Source:** {metadata['site_name']}")
+            # Safely handle og_metadata
+            metadata = data.get('og_metadata', {})
+            if metadata.get('title'):
+                st.header(metadata['title'])
+            
+            # Only show source if site_name exists
+            if metadata.get('site_name'):
+                st.write(f"**Source:** {metadata['site_name']}")
 
             # Display summary
             st.header("Summary")
