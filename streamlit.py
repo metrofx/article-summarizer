@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 def fetch_article_data(url):
     encoded_url = quote(url)
-    api_endpoint = f"http://localhost:8000/analyze?url={encoded_url}"
+    api_endpoint = f"http://api:8000/analyze?url={encoded_url}"  # Changed from localhost to api
     try:
         response = requests.get(api_endpoint)
         response.raise_for_status()
@@ -22,7 +22,7 @@ def main():
 
     # URL input and button in the same row
     with col1:
-        url = st.text_input("", placeholder="Enter article URL:", label_visibility="collapsed")
+        url = st.text_input(" ", placeholder="Enter article URL:", label_visibility="collapsed")
     with col2:
         analyze_button = st.button("Analyze", type="primary")
 
@@ -51,7 +51,7 @@ def main():
                 section = section.strip()
                 if section:
                     if section[0].isdigit():
-                        st.markdown(f"• {section[2:].strip()}")
+                        st.markdown(f"• {section[2:].trip()}")
                     else:
                         st.markdown(section)
 
