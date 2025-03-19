@@ -9,6 +9,7 @@ services:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     volumes:
       - .:/app
+      - cache_data:/app/cache
     networks:
       - app_network
 
@@ -29,3 +30,6 @@ services:
 networks:
   app_network:
     driver: bridge
+
+volumes:
+  cache_data:

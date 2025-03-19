@@ -7,15 +7,21 @@ import os
 from dotenv import load_dotenv
 from typing import Optional
 import json
+from db import Cache
+import logging
 
 # Load environment variables
 load_dotenv()
 
 app = FastAPI()
+cache = Cache()
 
 # OpenRouter API configuration
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class URLInput(BaseModel):
     url: HttpUrl
@@ -61,7 +67,7 @@ async def summarize_text(text: str) -> str:
 """
 
     data = {
-        "model": "nousresearch/hermes-3-llama-3.1-70b",  # Replace with a valid model name
+        "model": "openai/gpt-4o-mini",  # Replace with a valid model name
         "messages": [
             {"role": "user", "content": prompt}
         ]
@@ -84,28 +90,70 @@ async def analyze_url(url: str):
     try:
         # Validate URL
         url_input = URLInput(url=url)
+        logger.info(f"Analyzing URL: {url}")
+        
+        try:
+            # Check cache first
+            cached_data = cache.get_cached_article(url)
+            if cached_data:
+                logger.info(f"Returning cached data for: {url}")
+                return {
+                    "url": url,
+                    "og_metadata": cached_data["og_metadata"],
+                    "content": {
+                        "full_text": cached_data["text_content"],
+                        "summary": cached_data["summary"]
+                    },
+                    "cached": True
+                }
+        except Exception as cache_error:
+            logger.error(f"Cache error: {str(cache_error)}")
+            # Continue with normal processing if cache fails
 
-        # Extract OpenGraph metadata
-        og_metadata = extract_opengraph_metadata(url)
+        # Process normally
+        try:
+            og_metadata = extract_opengraph_metadata(url)
+            logger.info("Successfully extracted metadata")
+        except Exception as e:
+            logger.error(f"Metadata extraction error: {str(e)}")
+            og_metadata = {}
 
-        # Extract text content
-        text_content = extract_text_content(url)
+        try:
+            text_content = extract_text_content(url)
+            logger.info("Successfully extracted text content")
+        except Exception as e:
+            logger.error(f"Text extraction error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to extract content: {str(e)}")
 
-        # Generate summary
-        summary = await summarize_text(text_content)
+        try:
+            summary = await summarize_text(text_content)
+            logger.info("Successfully generated summary")
+        except Exception as e:
+            logger.error(f"Summary generation error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
 
-        # Prepare response
-        response = {
+        # Try to cache the results
+        try:
+            cache.cache_article(url, text_content, summary, og_metadata)
+        except Exception as cache_error:
+            logger.error(f"Failed to cache results: {str(cache_error)}")
+            # Continue even if caching fails
+
+        return {
             "url": url,
             "og_metadata": og_metadata,
             "content": {
                 "full_text": text_content,
                 "summary": summary
-            }
+            },
+            "cached": False
         }
 
-        return response
+    except HTTPException as http_error:
+        logger.error(f"HTTP error: {str(http_error)}")
+        raise
     except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

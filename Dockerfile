@@ -23,5 +23,11 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
+# Add volume for persistent cache
+VOLUME /app/cache
+
+# Make sure the cache directory exists
+RUN mkdir -p /app/cache
+
 # Command will be overridden by docker-compose for web service
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
