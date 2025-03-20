@@ -46,7 +46,18 @@ def extract_opengraph_metadata(url: str) -> dict:
 def extract_text_content(url: str) -> str:
     try:
         downloaded = trafilatura.fetch_url(url)
-        text = trafilatura.extract(downloaded, include_links=False, output_format='markdown')
+        
+        # Configure trafilatura settings to exclude links and other elements
+        config = {
+            'include_links': False,
+            'include_formatting': False,
+            'include_images': False,
+            'include_tables': True,
+            'no_fallback': True,
+            'output_format': 'markdown'
+        }
+        
+        text = trafilatura.extract(downloaded, **config)
         return text if text else ""
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error extracting text content: {str(e)}")
