@@ -26,6 +26,18 @@ logger = logging.getLogger(__name__)
 class URLInput(BaseModel):
     url: HttpUrl
 
+class ExtractResponse(BaseModel):
+    url: str
+    og_metadata: dict
+    text_content: str
+    cached: bool = False
+
+class SummarizeRequest(BaseModel):
+    text: str
+
+class SummarizeResponse(BaseModel):
+    summary: str
+
 def extract_opengraph_metadata(url: str) -> dict:
     try:
         response = requests.get(url)
@@ -96,6 +108,57 @@ async def summarize_text(text: str) -> str:
         print("Response body:", e.response.text)
         raise HTTPException(status_code=500, detail=f"Error summarizing text: {e.response.text}")
 
+@app.post("/extract")
+async def extract_url_content(url_input: URLInput) -> ExtractResponse:
+    url = str(url_input.url)
+    logger.info(f"Extracting content from URL: {url}")
+    
+    try:
+        # Check cache first
+        cached_data = cache.get_cached_article(url)
+        if cached_data:
+            logger.info(f"Returning cached data for: {url}")
+            return ExtractResponse(
+                url=url,
+                og_metadata=cached_data["og_metadata"],
+                text_content=cached_data["text_content"],
+                cached=True
+            )
+    except Exception as cache_error:
+        logger.error(f"Cache error: {str(cache_error)}")
+
+    try:
+        og_metadata = extract_opengraph_metadata(url)
+        text_content = extract_text_content(url)
+        
+        # Try to cache the results
+        try:
+            cache.cache_article(url, text_content, None, og_metadata)
+        except Exception as cache_error:
+            logger.error(f"Failed to cache results: {str(cache_error)}")
+
+        return ExtractResponse(
+            url=url,
+            og_metadata=og_metadata,
+            text_content=text_content
+        )
+
+    except Exception as e:
+        logger.error(f"Extraction error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/summarize")
+async def summarize_content(request: SummarizeRequest) -> SummarizeResponse:
+    logger.info("Summarizing text content")
+    
+    try:
+        summary = await summarize_text(request.text)
+        return SummarizeResponse(summary=summary)
+    except Exception as e:
+        logger.error(f"Summarization error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Replace the existing /analyze endpoint
 @app.get("/analyze")
 async def analyze_url(url: str):
     try:
@@ -103,61 +166,23 @@ async def analyze_url(url: str):
         url_input = URLInput(url=url)
         logger.info(f"Analyzing URL: {url}")
         
-        try:
-            # Check cache first
-            cached_data = cache.get_cached_article(url)
-            if cached_data:
-                logger.info(f"Returning cached data for: {url}")
-                return {
-                    "url": url,
-                    "og_metadata": cached_data["og_metadata"],
-                    "content": {
-                        "full_text": cached_data["text_content"],
-                        "summary": cached_data["summary"]
-                    },
-                    "cached": True
-                }
-        except Exception as cache_error:
-            logger.error(f"Cache error: {str(cache_error)}")
-            # Continue with normal processing if cache fails
-
-        # Process normally
-        try:
-            og_metadata = extract_opengraph_metadata(url)
-            logger.info("Successfully extracted metadata")
-        except Exception as e:
-            logger.error(f"Metadata extraction error: {str(e)}")
-            og_metadata = {}
-
-        try:
-            text_content = extract_text_content(url)
-            logger.info("Successfully extracted text content")
-        except Exception as e:
-            logger.error(f"Text extraction error: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Failed to extract content: {str(e)}")
-
-        try:
-            summary = await summarize_text(text_content)
-            logger.info("Successfully generated summary")
-        except Exception as e:
-            logger.error(f"Summary generation error: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
-
-        # Try to cache the results
-        try:
-            cache.cache_article(url, text_content, summary, og_metadata)
-        except Exception as cache_error:
-            logger.error(f"Failed to cache results: {str(cache_error)}")
-            # Continue even if caching fails
-
+        # First extract content
+        extract_result = await extract_url_content(url_input)
+        
+        # Then summarize
+        if not extract_result.text_content:
+            raise HTTPException(status_code=422, detail="No content extracted to summarize")
+            
+        summarize_result = await summarize_content(SummarizeRequest(text=extract_result.text_content))
+        
         return {
             "url": url,
-            "og_metadata": og_metadata,
+            "og_metadata": extract_result.og_metadata,
             "content": {
-                "full_text": text_content,
-                "summary": summary
+                "full_text": extract_result.text_content,
+                "summary": summarize_result.summary
             },
-            "cached": False
+            "cached": extract_result.cached
         }
 
     except HTTPException as http_error:
