@@ -11,7 +11,7 @@ services:
       - .:/app
       - cache_data:/app/cache
     networks:
-      - app_network
+      - metrominet
 
   web:
     build: .
@@ -25,10 +25,10 @@ services:
     depends_on:
       - api
     networks:
-      - app_network
+      - metrominet
 
 networks:
-  app_network:
+  metrominet:
     driver: bridge
 
 volumes:

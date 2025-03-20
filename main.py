@@ -46,7 +46,7 @@ def extract_opengraph_metadata(url: str) -> dict:
 def extract_text_content(url: str) -> str:
     try:
         downloaded = trafilatura.fetch_url(url)
-        text = trafilatura.extract(downloaded, include_links=True, output_format='markdown')
+        text = trafilatura.extract(downloaded, include_links=False, output_format='markdown')
         return text if text else ""
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error extracting text content: {str(e)}")
@@ -60,7 +60,7 @@ async def summarize_text(text: str) -> str:
         "Content-Type": "application/json"
     }
 
-    prompt = f"""Summarize article text surrounded by <content> </content> tags into structured key ideas, making it easy to read and comprehend. Respond with the language of the article. The summary should be concise, clear, and capture the main points of the content. Start the response directly with the content, without any preamble or introductory statements. End with important quote taken from the article that is unique and capture attention.
+    prompt = f"""Summarize article text surrounded by <content> </content> tags into structured key ideas, making it easy to read and comprehend. If you detect non English content, respond with Bahasa Indonesia. The summary should be concise, clear, and capture the main points of the content. Start the response directly with the content, without any preamble or introductory statements. End with important quote taken from the article that is unique and capture attention.
 <content>
 {text}
 </content>

@@ -1,11 +1,14 @@
 import streamlit as st
 import requests
 import json
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 def fetch_article_data(url):
-    encoded_url = quote(url)
-    api_endpoint = f"http://api:8000/analyze?url={encoded_url}"  # Changed from localhost to api
+    # First decode the URL in case it's already URL-encoded
+    decoded_url = unquote(url)
+    # Then properly encode it for the API request
+    encoded_url = quote(decoded_url, safe=':/?=')
+    api_endpoint = f"http://api:8000/analyze?url={encoded_url}"
     try:
         response = requests.get(api_endpoint)
         response.raise_for_status()
@@ -17,16 +20,28 @@ def fetch_article_data(url):
 def main():
     st.set_page_config(page_title="Article Analyzer", layout="wide")
 
+    # Get URL parameter if it exists
+    query_params = st.query_params
+    url_param = query_params.get("url", "")
+    # Handle single value or list
+    url_param = url_param[0] if isinstance(url_param, list) else url_param
+
     # Create two columns for URL input and Analyze button
     col1, col2 = st.columns([6, 1])  # 6:1 ratio for URL field:button
 
     # URL input and button in the same row
     with col1:
-        url = st.text_input(" ", placeholder="Enter article URL:", label_visibility="collapsed")
+        url = st.text_input(" ", 
+                           value=url_param,  # Set initial value from URL parameter
+                           placeholder="Enter article URL:", 
+                           label_visibility="collapsed")
     with col2:
         analyze_button = st.button("Analyze", type="primary")
 
-    if url and analyze_button:
+    # Automatically analyze if URL parameter is present
+    should_analyze = analyze_button or (url_param and not analyze_button)
+
+    if url and should_analyze:
         data = fetch_article_data(url)
 
         if data:
@@ -51,7 +66,7 @@ def main():
                 section = section.strip()
                 if section:
                     if section[0].isdigit():
-                        st.markdown(f"• {section[2:].trip()}")
+                        st.markdown(f"• {section[2:].strip()}")
                     else:
                         st.markdown(section)
 
