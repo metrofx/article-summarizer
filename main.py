@@ -34,6 +34,7 @@ class ExtractResponse(BaseModel):
 
 class SummarizeRequest(BaseModel):
     text: str
+    url: Optional[str] = None
 
 class SummarizeResponse(BaseModel):
     summary: str
@@ -152,13 +153,37 @@ async def summarize_content(request: SummarizeRequest) -> SummarizeResponse:
     logger.info("Summarizing text content")
     
     try:
+        # Check cache if URL is provided
+        if request.url:
+            cached_data = cache.get_cached_article(request.url)
+            if cached_data and cached_data.get("summary"):
+                logger.info(f"Returning cached summary for: {request.url}")
+                return SummarizeResponse(summary=cached_data["summary"])
+
         summary = await summarize_text(request.text)
+        
+        # Cache the summary if URL is provided
+        if request.url:
+            try:
+                # Get existing cached data first
+                existing_data = cache.get_cached_article(request.url) or {}
+                
+                # Update cache with summary while preserving other data
+                cache.cache_article(
+                    url=request.url,
+                    text_content=existing_data.get("text_content"),
+                    summary=summary,
+                    og_metadata=existing_data.get("og_metadata")
+                )
+                logger.info(f"Successfully cached summary for: {request.url}")
+            except Exception as cache_error:
+                logger.error(f"Failed to cache summary: {str(cache_error)}")
+        
         return SummarizeResponse(summary=summary)
     except Exception as e:
         logger.error(f"Summarization error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Replace the existing /analyze endpoint
 @app.get("/analyze")
 async def analyze_url(url: str):
     try:
@@ -169,11 +194,14 @@ async def analyze_url(url: str):
         # First extract content
         extract_result = await extract_url_content(url_input)
         
-        # Then summarize
+        # Then summarize (now passing the URL)
         if not extract_result.text_content:
             raise HTTPException(status_code=422, detail="No content extracted to summarize")
             
-        summarize_result = await summarize_content(SummarizeRequest(text=extract_result.text_content))
+        summarize_result = await summarize_content(SummarizeRequest(
+            text=extract_result.text_content,
+            url=url
+        ))
         
         return {
             "url": url,

@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 
 services:
   api:
@@ -16,12 +16,12 @@ services:
   web:
     build: .
     ports:
-      - "8501:8501"
+      - "7860:7860"
     environment:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     volumes:
       - .:/app
-    command: streamlit run streamlit.py
+    command: python frontend.py
     depends_on:
       - api
     networks:
