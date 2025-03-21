@@ -5,7 +5,7 @@ import requests
 import trafilatura
 import os
 from dotenv import load_dotenv
-from typing import Optional
+from typing import Optional, Dict, Any
 import json
 from db import Cache
 import logging
@@ -38,6 +38,13 @@ class SummarizeRequest(BaseModel):
 
 class SummarizeResponse(BaseModel):
     summary: str
+    cached: bool = False
+
+class AnalyzeResponse(BaseModel):
+    url: str
+    og_metadata: dict
+    content: Dict[str, str]
+    cached: bool = False
 
 def extract_opengraph_metadata(url: str) -> dict:
     try:
@@ -59,7 +66,7 @@ def extract_opengraph_metadata(url: str) -> dict:
 def extract_text_content(url: str) -> str:
     try:
         downloaded = trafilatura.fetch_url(url)
-        
+
         # Configure trafilatura settings to exclude links and other elements
         config = {
             'include_links': False,
@@ -69,7 +76,7 @@ def extract_text_content(url: str) -> str:
             'no_fallback': True,
             'output_format': 'markdown'
         }
-        
+
         text = trafilatura.extract(downloaded, **config)
         return text if text else ""
     except Exception as e:
@@ -109,115 +116,115 @@ async def summarize_text(text: str) -> str:
         print("Response body:", e.response.text)
         raise HTTPException(status_code=500, detail=f"Error summarizing text: {e.response.text}")
 
+async def process_url(url: str) -> Dict[str, Any]:
+    """
+    Process a URL completely - extract text, metadata, and generate summary.
+    This is the core function that handles all processing and caching.
+    """
+    logger.info(f"Processing URL: {url}")
+
+    # Check cache first for complete data
+    cached_data = cache.get_cached_article(url)
+
+    # If we have complete cached data, return it
+    if cached_data and cached_data.get("text_content") and cached_data.get("summary") and cached_data.get("og_metadata"):
+        logger.info(f"Found complete cached data for: {url}")
+        return {
+            "url": url,
+            "og_metadata": cached_data["og_metadata"],
+            "text_content": cached_data["text_content"],
+            "summary": cached_data["summary"],
+            "cached": True
+        }
+
+    # If not in cache or incomplete, process the URL
+    try:
+        # Extract metadata and text content
+        og_metadata = cached_data.get("og_metadata") if cached_data else extract_opengraph_metadata(url)
+        text_content = cached_data.get("text_content") if cached_data else extract_text_content(url)
+
+        # Generate summary if needed
+        if cached_data and cached_data.get("summary"):
+            summary = cached_data["summary"]
+        else:
+            summary = await summarize_text(text_content)
+
+        # Cache all the data
+        cache.cache_article(url, text_content, summary, og_metadata)
+
+        return {
+            "url": url,
+            "og_metadata": og_metadata,
+            "text_content": text_content,
+            "summary": summary,
+            "cached": False
+        }
+    except Exception as e:
+        logger.error(f"Error processing URL: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/extract")
 async def extract_url_content(url_input: URLInput) -> ExtractResponse:
     url = str(url_input.url)
-    logger.info(f"Extracting content from URL: {url}")
-    
-    try:
-        # Check cache first
-        cached_data = cache.get_cached_article(url)
-        if cached_data:
-            logger.info(f"Returning cached data for: {url}")
-            return ExtractResponse(
-                url=url,
-                og_metadata=cached_data["og_metadata"],
-                text_content=cached_data["text_content"],
-                cached=True
-            )
-    except Exception as cache_error:
-        logger.error(f"Cache error: {str(cache_error)}")
+    logger.info(f"Extract endpoint called for URL: {url}")
 
     try:
-        og_metadata = extract_opengraph_metadata(url)
-        text_content = extract_text_content(url)
-        
-        # Try to cache the results
-        try:
-            cache.cache_article(url, text_content, None, og_metadata)
-        except Exception as cache_error:
-            logger.error(f"Failed to cache results: {str(cache_error)}")
+        # Process the URL completely
+        result = await process_url(url)
 
+        # Return only the extraction part
         return ExtractResponse(
             url=url,
-            og_metadata=og_metadata,
-            text_content=text_content
+            og_metadata=result["og_metadata"],
+            text_content=result["text_content"],
+            cached=result["cached"]
         )
-
     except Exception as e:
         logger.error(f"Extraction error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/summarize")
 async def summarize_content(request: SummarizeRequest) -> SummarizeResponse:
-    logger.info("Summarizing text content")
-    
-    try:
-        # Check cache if URL is provided
-        if request.url:
-            cached_data = cache.get_cached_article(request.url)
-            if cached_data and cached_data.get("summary"):
-                logger.info(f"Returning cached summary for: {request.url}")
-                return SummarizeResponse(summary=cached_data["summary"])
+    logger.info("Summarize endpoint called")
 
-        summary = await summarize_text(request.text)
-        
-        # Cache the summary if URL is provided
+    try:
         if request.url:
-            try:
-                # Get existing cached data first
-                existing_data = cache.get_cached_article(request.url) or {}
-                
-                # Update cache with summary while preserving other data
-                cache.cache_article(
-                    url=request.url,
-                    text_content=existing_data.get("text_content"),
-                    summary=summary,
-                    og_metadata=existing_data.get("og_metadata")
-                )
-                logger.info(f"Successfully cached summary for: {request.url}")
-            except Exception as cache_error:
-                logger.error(f"Failed to cache summary: {str(cache_error)}")
-        
-        return SummarizeResponse(summary=summary)
+            # Process the URL completely
+            result = await process_url(request.url)
+
+            # Return only the summary part
+            return SummarizeResponse(
+                summary=result["summary"],
+                cached=result["cached"]
+            )
+        else:
+            # If no URL provided, just summarize the text without caching
+            summary = await summarize_text(request.text)
+            return SummarizeResponse(summary=summary)
     except Exception as e:
         logger.error(f"Summarization error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/analyze")
-async def analyze_url(url: str):
-    try:
-        # Validate URL
-        url_input = URLInput(url=url)
-        logger.info(f"Analyzing URL: {url}")
-        
-        # First extract content
-        extract_result = await extract_url_content(url_input)
-        
-        # Then summarize (now passing the URL)
-        if not extract_result.text_content:
-            raise HTTPException(status_code=422, detail="No content extracted to summarize")
-            
-        summarize_result = await summarize_content(SummarizeRequest(
-            text=extract_result.text_content,
-            url=url
-        ))
-        
-        return {
-            "url": url,
-            "og_metadata": extract_result.og_metadata,
-            "content": {
-                "full_text": extract_result.text_content,
-                "summary": summarize_result.summary
-            },
-            "cached": extract_result.cached
-        }
+async def analyze_url(url: str) -> AnalyzeResponse:
+    logger.info(f"Analyze endpoint called for URL: {url}")
 
-    except HTTPException as http_error:
-        logger.error(f"HTTP error: {str(http_error)}")
-        raise
+    try:
+        # Process the URL completely
+        result = await process_url(url)
+
+        # Return the full analysis
+        return AnalyzeResponse(
+            url=url,
+            og_metadata=result["og_metadata"],
+            content={
+                "full_text": result["text_content"],
+                "summary": result["summary"]
+            },
+            cached=result["cached"]
+        )
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Analysis error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

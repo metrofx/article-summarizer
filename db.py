@@ -33,13 +33,13 @@ class Cache:
                 FROM article_cache
                 WHERE url = ?
             """, [url]).fetchone()
-            
+
             if result:
                 logger.info(f"Cache hit for URL: {url}")
                 return {
                     "text_content": result[0],
                     "summary": result[1],
-                    "og_metadata": json.loads(result[2])
+                    "og_metadata": json.loads(result[2]) if result[2] else {}
                 }
             logger.info(f"Cache miss for URL: {url}")
             return None
@@ -47,8 +47,22 @@ class Cache:
             logger.error(f"Error retrieving from cache: {str(e)}")
             return None
 
-    def cache_article(self, url: str, text_content: str, summary: str, og_metadata: dict):
+    def cache_article(self, url: str, text_content: str = None, summary: str = None, og_metadata: dict = None):
         try:
+            # First check if we have existing data to preserve any fields not being updated
+            existing = self.get_cached_article(url)
+
+            if existing:
+                # Use existing values for any parameters that are None
+                text_content = text_content if text_content is not None else existing.get("text_content")
+                summary = summary if summary is not None else existing.get("summary")
+                og_metadata = og_metadata if og_metadata is not None else existing.get("og_metadata")
+
+            # Ensure we have valid values (empty string/dict instead of None)
+            text_content = text_content or ""
+            summary = summary or ""
+            og_metadata = og_metadata or {}
+
             self.conn.execute("""
                 INSERT INTO article_cache (url, text_content, summary, og_metadata, created_at)
                 VALUES (?, ?, ?, ?, ?)
@@ -59,6 +73,7 @@ class Cache:
                     created_at = excluded.created_at
             """, [url, text_content, summary, json.dumps(og_metadata), datetime.now()])
             logger.info(f"Successfully cached article: {url}")
+            return True
         except Exception as e:
             logger.error(f"Error caching article: {str(e)}")
-            raise
+            return False
