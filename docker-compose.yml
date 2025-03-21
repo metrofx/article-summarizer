@@ -6,11 +6,11 @@ services:
       context: .
       dockerfile: Dockerfile.api
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     volumes:
-      - .:/app
+      - ./api:/app
       - cache_data:/app/cache
 
   web:

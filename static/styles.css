@@ -263,7 +263,7 @@ button:disabled {
 
 /* Article content styling */
 .article-content, .article-summary {
-    font-size: 18px;
+    font-size: 14px;
     line-height: 1.8;
     color: var(--text-color);
 }
@@ -323,7 +323,7 @@ button:disabled {
 /* Permalink */
 .permalink-container {
     margin: 10px 0 20px;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 /* Accordion */
