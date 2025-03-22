@@ -66,6 +66,9 @@ function articleAnalyzer() {
             const image = og.image || '';
             const siteName = og.site_name || '';
 
+            // Update page title
+            document.title = `Smmryzr - ${this.escapeHtml(title)}`;
+
             // Create metadata card HTML
             this.metadata = `
                 <div class="metadata-card">
