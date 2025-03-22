@@ -71,12 +71,12 @@ function articleAnalyzer() {
                 <div class="metadata-card">
                     <div class="metadata-content">
                         <div class="metadata-text">
+                            <p class="site-name">${this.escapeHtml(siteName)}</p>
                             <h3>${this.escapeHtml(title)}</h3>
                             <p class="description">${this.escapeHtml(description)}</p>
                         </div>
                         <div class="metadata-footer">
                             ${image ? `<img src="${image}" alt="Article image">` : ''}
-                            <span class="site-name">${this.escapeHtml(siteName)}</span>
                         </div>
                     </div>
                 </div>
