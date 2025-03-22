@@ -46,6 +46,9 @@ class AnalyzeResponse(BaseModel):
     content: Dict[str, str]
     cached: bool = False
 
+class LatestArticlesResponse(BaseModel):
+    articles: list[dict]
+
 def extract_opengraph_metadata(url: str) -> dict:
     try:
         response = requests.get(url)
@@ -225,6 +228,16 @@ async def analyze_url(url: str) -> AnalyzeResponse:
         )
     except Exception as e:
         logger.error(f"Analysis error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/latest")
+async def get_latest_articles() -> LatestArticlesResponse:
+    logger.info("Latest articles endpoint called")
+    try:
+        latest = cache.get_latest_articles(limit=5)
+        return LatestArticlesResponse(articles=latest)
+    except Exception as e:
+        logger.error(f"Error fetching latest articles: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

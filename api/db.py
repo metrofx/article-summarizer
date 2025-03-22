@@ -77,3 +77,27 @@ class Cache:
         except Exception as e:
             logger.error(f"Error caching article: {str(e)}")
             return False
+
+    def get_latest_articles(self, limit: int = 5):
+        try:
+            result = self.conn.execute("""
+                SELECT url, og_metadata, created_at
+                FROM article_cache
+                WHERE og_metadata IS NOT NULL
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, [limit]).fetchall()
+
+            articles = []
+            for row in result:
+                url, og_metadata, created_at = row
+                metadata = json.loads(og_metadata) if og_metadata else {}
+                articles.append({
+                    "url": url,
+                    "metadata": metadata,
+                    "created_at": created_at.isoformat() if created_at else None
+                })
+            return articles
+        except Exception as e:
+            logger.error(f"Error getting latest articles: {str(e)}")
+            return []

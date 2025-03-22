@@ -11,6 +11,7 @@ function articleAnalyzer() {
         advancedOpen: false,
         permalink: '',
         hasResults: false,
+        latestArticles: [],
 
         init() {
             // Watch for theme changes and save to localStorage
@@ -25,6 +26,11 @@ function articleAnalyzer() {
             // Auto-analyze if URL is in query params
             if (this.url) {
                 this.analyzeArticle();
+            }
+
+            // Load latest articles if no URL
+            if (!this.url) {
+                this.loadLatestArticles();
             }
         },
 
@@ -106,6 +112,31 @@ function articleAnalyzer() {
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        },
+
+        loadLatestArticles() {
+            fetch('/api/latest')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    this.latestArticles = data.articles.map(article => {
+                        const og = article.metadata;
+                        return {
+                            url: article.url,
+                            title: og.title || 'No title available',
+                            description: og.description || 'No description available',
+                            image: og.image || '',
+                            siteName: og.site_name || ''
+                        };
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading latest articles:', error);
+                });
         }
     };
 }

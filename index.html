@@ -63,12 +63,39 @@
             <a :href="permalink" style="color: var (--accent-color);" x-text="permalink"></a>
         </div>
 
+        <div x-show="!url && latestArticles.length > 0" class="latest-articles">
+            <h2 class="latest-heading">Latest Analyzed</h2>
+            <template x-for="article in latestArticles" :key="article.url">
+                <div class="metadata-card" @click="url = article.url; analyzeArticle()">
+                    <div class="metadata-content">
+                        <div class="metadata-text">
+                            <p class="site-name" x-text="article.siteName"></p>
+                            <h3 x-text="article.title"></h3>
+                            <p class="description" x-text="article.description"></p>
+                        </div>
+                        <div class="metadata-footer">
+                            <template x-if="article.image">
+                                <img :src="article.image" alt="Article image">
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
         <div class="footer">
-            <button @click="theme = theme === 'light-mode' ? 'dark-mode' : 'light-mode'" 
-                    class="theme-button" 
-                    :aria-label="theme === 'light-mode' ? 'Switch to dark mode' : 'Switch to light mode'">
-                <span x-text="theme === 'light-mode' ? '🌙' : '☀️'"></span>
-            </button>
+            <div class="footer-controls">
+                <button @click="window.location.href='/'" 
+                        class="nav-button" 
+                        aria-label="Go to home page">
+                    <span>🏠</span>
+                </button>
+                <button @click="theme = theme === 'light-mode' ? 'dark-mode' : 'light-mode'" 
+                        class="theme-button" 
+                        :aria-label="theme === 'light-mode' ? 'Switch to dark mode' : 'Switch to light mode'">
+                    <span x-text="theme === 'light-mode' ? '🌙' : '☀️'"></span>
+                </button>
+            </div>
             <p>Extract content, metadata, and get AI summary from any URL
             <br>Donate: <a href="https://saweria.co/xfortem">Dukung di Saweria</a>
             </p>

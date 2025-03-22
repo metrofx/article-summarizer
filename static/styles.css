@@ -368,7 +368,15 @@ button:disabled {
     font-size: 0.6em;
 }
 
-.theme-button {
+.footer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.theme-button,
+.nav-button {
     background: none;
     border: none;
     padding: 0 5px;
@@ -379,7 +387,8 @@ button:disabled {
     transition: opacity 0.2s;
 }
 
-.theme-button:hover {
+.theme-button:hover,
+.nav-button:hover {
     opacity: 1;
 }
 
@@ -391,4 +400,24 @@ a {
 
 body.dark-mode a {
     color: #738aff;  /* Link color for dark mode */
+}
+
+/* Add this at the end of the file */
+.latest-articles {
+    margin: 40px 0;
+}
+
+.latest-heading {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    color: var(--text-color);
+    text-align: center;
+}
+
+.latest-articles .metadata-card {
+    margin-bottom: 20px;
+}
+
+.latest-articles .metadata-card:last-child {
+    margin-bottom: 0;
 }
