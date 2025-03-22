@@ -156,8 +156,9 @@ button:disabled {
 }
 
 .metadata-footer img {
-    width: 300px;
-    height: 200px;
+    /* width: 300px; */
+    /* height: 200px; */
+    width: 95%;
     margin-top: 2px;
     border-radius: 4px;
 }
@@ -262,7 +263,7 @@ button:disabled {
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 12px var(--card-shadow);
-    border-left: 4px solid var(--accent-color);
+    /* border-left: 4px solid var(--accent-color); */
 }
 
 /* Article content styling */
@@ -411,7 +412,7 @@ body.dark-mode a {
     font-size: 1.5em;
     margin-bottom: 20px;
     color: var(--text-color);
-    text-align: center;
+    text-align: left;
 }
 
 .latest-articles .metadata-card {

@@ -12,8 +12,34 @@
 <body x-data="articleAnalyzer()" :class="theme">
     <div class="container">
         <div style="text-align: center; margin-bottom: 20px;">
-            <h1 style="margin-bottom: 5px;">Smmryzr</h1>
+            <h1 style="margin-bottom: 30px; text-align: left;">
+                <button @click="window.location.href='/'" 
+                        class="nav-button" 
+                        aria-label="Go to home page">
+                    <span>🤯</span>
+                </button>
+                     Smmryzr</h1>
         </div>
+
+        <div class="input-row">
+            <div class="url-input-container">
+                <input 
+                    type="text" 
+                    x-model="url" 
+                    placeholder="Enter URL to extract and summarize" 
+                    @keyup.enter="analyzeArticle()"
+                    class="url-input"
+                >
+            </div>
+            <div class="button-container">
+                <button @click="analyzeArticle()" class="primary" :disabled="isLoading">
+                    <span x-show="!isLoading">Go</span>
+                    <span x-show="isLoading">Processing...</span>
+                </button>
+            </div>
+        </div>
+
+        <div x-show="error" class="error-card" x-text="error"></div>
 
         <div x-show="metadata" class="metadata-container" x-html="metadata"></div>
 
@@ -38,33 +64,13 @@
             </div>
         </div>
 
-        <div class="input-row">
-            <div class="url-input-container">
-                <input 
-                    type="text" 
-                    x-model="url" 
-                    placeholder="Enter URL to extract and summarize" 
-                    @keyup.enter="analyzeArticle()"
-                    class="url-input"
-                >
-            </div>
-            <div class="button-container">
-                <button @click="analyzeArticle()" class="primary" :disabled="isLoading">
-                    <span x-show="!isLoading">Analyze</span>
-                    <span x-show="isLoading">Processing...</span>
-                </button>
-            </div>
-        </div>
-
-        <div x-show="error" class="error-card" x-text="error"></div>
-
         <div x-show="permalink" class="permalink-container">
             <span style="color: var(--muted-text);">Permalink: </span>
             <a :href="permalink" style="color: var (--accent-color);" x-text="permalink"></a>
         </div>
 
         <div x-show="!url && latestArticles.length > 0" class="latest-articles">
-            <h2 class="latest-heading">Latest Analyzed</h2>
+            <h2 class="latest-heading" style="text-align: left;">📰 Latest</h2>
             <template x-for="article in latestArticles" :key="article.url">
                 <div class="metadata-card" @click="url = article.url; analyzeArticle()">
                     <div class="metadata-content">
@@ -84,11 +90,16 @@
         </div>
 
         <div class="footer">
-            <div class="footer-controls">
+            <div class="footer-controls" style="font-size:medium;">
                 <button @click="window.location.href='/'" 
                         class="nav-button" 
                         aria-label="Go to home page">
                     <span>🏠</span>
+                </button>
+                <button @click="window.scrollTo({top: 0, behavior: 'smooth'})"
+                        class="nav-button"
+                        aria-label="Scroll to top">
+                    <span>🔝</span>
                 </button>
                 <button @click="theme = theme === 'light-mode' ? 'dark-mode' : 'light-mode'" 
                         class="theme-button" 
@@ -97,7 +108,7 @@
                 </button>
             </div>
             <p>Extract content, metadata, and get AI summary from any URL
-            <br>Donate: <a href="https://saweria.co/xfortem">Dukung di Saweria</a>
+            <br>Donate: <a href="https://saweria.co/xfortem">Saweria</a>
             </p>
         </div>
     </div>
