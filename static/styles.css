@@ -156,8 +156,8 @@ button:disabled {
 }
 
 .metadata-footer img {
-    width: 15px;
-    height: 15px;
+    width: 300px;
+    height: 200px;
     margin-top: 2px;
     border-radius: 4px;
 }
@@ -381,4 +381,14 @@ button:disabled {
 
 .theme-button:hover {
     opacity: 1;
+}
+
+/* Add this after the base styles section */
+a {
+    color: #4a6cf7;  /* Default link color for light mode */
+    text-decoration: none;
+}
+
+body.dark-mode a {
+    color: #738aff;  /* Link color for dark mode */
 }
