@@ -315,7 +315,7 @@ button:disabled {
     color: var(--muted-text);
 }
 
-/* Error message */
+/* Enhanced error card styling */
 .error-card {
     background-color: var(--error-bg);
     color: var(--error-color);
@@ -323,6 +323,28 @@ button:disabled {
     border-radius: 8px;
     border-left: 4px solid var(--error-color);
     margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.error-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.error-icon {
+    margin-right: 8px;
+}
+
+.error-title {
+    font-size: 16px;
+}
+
+.error-message {
+    color: var(--text-color);
+    line-height: 1.5;
+    margin-left: 24px;
 }
 
 /* Permalink */

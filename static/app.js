@@ -41,11 +41,18 @@ function articleAnalyzer() {
             this.error = '';
             
             fetch(`/api/analyze?url=${encodeURIComponent(this.url)}`)
-                .then(response => {
+                .then(async response => {
+                    const data = await response.json();
                     if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
+                        // Enhanced error logging
+                        console.error('API Error:', {
+                            status: response.status,
+                            statusText: response.statusText,
+                            data: data
+                        });
+                        throw new Error(data.detail || `HTTP error! Status: ${response.status}`);
                     }
-                    return response.json();
+                    return data;
                 })
                 .then(data => {
                     this.processData(data);
@@ -53,6 +60,7 @@ function articleAnalyzer() {
                     this.hasResults = true;
                 })
                 .catch(error => {
+                    console.error('Request failed:', error);
                     this.error = `Error: ${error.message}`;
                     this.metadata = '';
                     this.summary = '';

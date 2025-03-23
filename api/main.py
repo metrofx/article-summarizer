@@ -1,4 +1,9 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware  # Changed import
+from fastapi.responses import JSONResponse
+from ipaddress import ip_address, ip_network
+from starlette.requests import Request
 from pydantic import BaseModel, HttpUrl
 from bs4 import BeautifulSoup
 import requests
@@ -11,10 +16,78 @@ from db import Cache
 import logging
 
 # Load environment variables
-load_dotenv()
+load_dotenv(verbose=True)  # Add verbose=True for debugging
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+# Log environment variables for debugging
+logger.info("Environment variables:")
+logger.info(f"ALLOWED_HOSTS env: {os.getenv('ALLOWED_HOSTS')}")
+logger.info(f"ALLOWED_IPS env: {os.getenv('ALLOWED_IPS')}")
+
+# Get allowed hosts and IPs from environment variables with better error handling
+def parse_ip_networks(ip_list: str) -> list:
+    networks = []
+    for ip in ip_list.split(","):
+        try:
+            networks.append(ip_network(ip.strip()))
+        except ValueError as e:
+            logger.error(f"Invalid IP/network in config: {ip.strip()}")
+    return networks
+
+# Define ALLOWED_HOSTS and ALLOWED_IPS before logging them
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_IPS = parse_ip_networks(os.getenv("ALLOWED_IPS", "127.0.0.1/32"))
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+# Print configuration at startup
+logger.info("=== API Configuration ===")
+logger.info(f"Allowed Hosts: {ALLOWED_HOSTS}")
+logger.info(f"Allowed IPs: {[str(n) for n in ALLOWED_IPS]}")
+logger.info(f"OpenRouter API Key configured: {'Yes' if OPENROUTER_API_KEY else 'No'}")
+logger.info("=====================")
 
 app = FastAPI()
 cache = Cache()
+
+# Add trusted hosts middleware
+app.add_middleware(
+    TrustedHostMiddleware, 
+    allowed_hosts=ALLOWED_HOSTS
+)
+
+class IPRestrictionMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        client_ip = request.client.host
+        # Add debug logging
+        logger.info(f"Request from IP: {client_ip}")
+        logger.info(f"Allowed IPs: {ALLOWED_IPS}")
+        logger.info(f"Request headers: {request.headers}")
+        
+        try:
+            client_addr = ip_address(client_ip)
+            if not any(client_addr in network for network in ALLOWED_IPS):
+                logger.warning(f"Access denied for IP: {client_ip}")
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "detail": f"Access denied. IP {client_ip} not in allowed networks: {[str(n) for n in ALLOWED_IPS]}"
+                    }
+                )
+        except ValueError:
+            logger.error(f"Invalid IP address: {client_ip}")
+            return JSONResponse(
+                status_code=400,
+                content={"detail": f"Invalid IP address: {client_ip}"}
+            )
+        
+        response = await call_next(request)
+        return response
+
+# Add IP restriction middleware
+app.add_middleware(IPRestrictionMiddleware)
 
 # OpenRouter API configuration
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -73,7 +146,7 @@ def extract_text_content(url: str) -> str:
         # Configure trafilatura settings to exclude links and other elements
         config = {
             'include_links': False,
-            'include_formatting': False,
+            'include_formatting': True,
             'include_images': False,
             'include_tables': True,
             'no_fallback': True,
@@ -94,7 +167,7 @@ async def summarize_text(text: str) -> str:
         "Content-Type": "application/json"
     }
 
-    prompt = f"""Summarize article text surrounded by <content> </content> tags into structured key ideas, making it easy to read and comprehend. If you detect non English content, respond with Bahasa Indonesia. The summary should be concise, clear, and capture the main points of the content. Start the response directly with the content, without any preamble or introductory statements. End with important quote taken from the article that is unique and capture attention.
+    prompt = f"""Summarize article text surrounded by <content> </content> tags into  structured key ideas, making it easy to read and comprehend. Determine the content language in it but don't mention it. Only respond in Bahasa Indonesia if you detect Indonesian language in it. Otherwise, always respond in English. The answer should be concise, clear, and capture the main points of the content. Start the response directly without any preamble or introductory statements. Do not inform that it's a summary. End with important quote taken from the article that is unique and capture attention.
 <content>
 {text}
 </content>
@@ -130,7 +203,7 @@ async def process_url(url: str) -> Dict[str, Any]:
     cached_data = cache.get_cached_article(url)
 
     # If we have complete cached data, return it
-    if cached_data and cached_data.get("text_content") and cached_data.get("summary") and cached_data.get("og_metadata"):
+    if (cached_data and cached_data.get("text_content") and cached_data.get("summary") and cached_data.get("og_metadata")):
         logger.info(f"Found complete cached data for: {url}")
         return {
             "url": url,

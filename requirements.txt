@@ -6,7 +6,8 @@ trafilatura
 python-dotenv
 pydantic
 beautifulsoup4
-streamlit
+#streamlit
 lxml_html_clean
 duckdb>=0.9.0
-gradio
+#gradio
+starlette

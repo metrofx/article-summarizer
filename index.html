@@ -39,7 +39,13 @@
             </div>
         </div>
 
-        <div x-show="error" class="error-card" x-text="error"></div>
+        <div x-show="error" class="error-card">
+            <div class="error-header">
+                <span class="error-icon">⚠️</span>
+                <span class="error-title">Error</span>
+            </div>
+            <div class="error-message" x-text="error"></div>
+        </div>
 
         <div x-show="metadata" class="metadata-container" x-html="metadata"></div>
 

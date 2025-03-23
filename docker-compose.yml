@@ -7,8 +7,10 @@ services:
       dockerfile: Dockerfile.api
     ports:
       - "8001:8000"
-    environment:
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    env_file:
+      - ./api/.env
+    #environment:
+      #- OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     volumes:
       - ./api:/app
       - cache_data:/app/cache
