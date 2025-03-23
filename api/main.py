@@ -14,6 +14,8 @@ from typing import Optional, Dict, Any
 import json
 from db import Cache
 import logging
+from fastapi.responses import HTMLResponse
+from urllib.parse import unquote
 
 # Load environment variables
 load_dotenv(verbose=True)  # Add verbose=True for debugging
@@ -311,6 +313,46 @@ async def get_latest_articles() -> LatestArticlesResponse:
         return LatestArticlesResponse(articles=latest)
     except Exception as e:
         logger.error(f"Error fetching latest articles: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/preview/{encoded_url:path}", response_class=HTMLResponse)
+async def preview_page(encoded_url: str):
+    try:
+        # Decode the URL
+        url = unquote(encoded_url)
+        
+        # Process the URL to get metadata and content
+        result = await process_url(url)
+        
+        og_metadata = result["og_metadata"]
+        summary = result["summary"]
+        
+        # Create HTML with proper Open Graph tags
+        html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{og_metadata.get('title', 'Article Preview')}</title>
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{og_metadata.get('title', 'Article Preview')}">
+    <meta property="og:description" content="{og_metadata.get('description', summary[:200] + '...' if len(summary) > 200 else summary)}">
+    <meta property="og:image" content="{og_metadata.get('image', '')}">
+    <meta property="og:url" content="{url}">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Smmryzr">
+    
+    <!-- Redirect to the actual article -->
+    <meta http-equiv="refresh" content="0;url={url}">
+</head>
+<body>
+    <p>Redirecting to article...</p>
+</body>
+</html>"""
+        
+        return HTMLResponse(content=html)
+    except Exception as e:
+        logger.error(f"Preview generation error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

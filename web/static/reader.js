@@ -128,6 +128,31 @@ function articleReader() {
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        },
+
+        async shareArticle() {
+            try {
+                const currentUrl = new URL(window.location.href);
+                const articleUrl = currentUrl.searchParams.get('url');
+                if (!articleUrl) return;
+                
+                const previewUrl = `${window.location.origin}/preview/${encodeURIComponent(articleUrl)}`;
+                
+                if (navigator.share) {
+                    // Use Web Share API if available
+                    await navigator.share({
+                        title: document.title,
+                        url: previewUrl
+                    });
+                } else {
+                    // Fallback to copying to clipboard
+                    await navigator.clipboard.writeText(previewUrl);
+                    alert('Share link copied to clipboard!');
+                }
+            } catch (err) {
+                console.error('Error sharing:', err);
+                alert('Error sharing article. Please try again.');
+            }
         }
     };
 }

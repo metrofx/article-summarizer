@@ -81,6 +81,11 @@
                         :aria-label="theme === 'light-mode' ? 'Switch to dark mode' : 'Switch to light mode'">
                     <span x-text="theme === 'light-mode' ? '🌙' : '☀️'"></span>
                 </button>
+                <button @click="shareArticle()" 
+                        class="nav-button"
+                        aria-label="Share article">
+                    <span>📤</span>
+                </button>
             </div>
             <p>Extract content, metadata, and get AI summary from any URL
             <br>Donate: <a href="https://saweria.co/xfortem">Saweria</a>
