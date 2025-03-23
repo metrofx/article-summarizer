@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware  # Changed import
 from fastapi.responses import JSONResponse
@@ -16,6 +16,8 @@ from db import Cache
 import logging
 from fastapi.responses import HTMLResponse
 from urllib.parse import unquote, urlparse  # Add urlparse import
+from datetime import datetime, timedelta
+from collections import defaultdict
 
 # Load environment variables
 load_dotenv(verbose=True)  # Add verbose=True for debugging
@@ -242,7 +244,7 @@ async def process_url(url: str) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/extract")
-async def extract_url_content(url_input: URLInput) -> ExtractResponse:
+async def extract_url_content(url_input: URLInput, rate_limit: Depends(check_rate_limit)) -> ExtractResponse:
     url = str(url_input.url)
     logger.info(f"Extract endpoint called for URL: {url}")
 
@@ -262,7 +264,7 @@ async def extract_url_content(url_input: URLInput) -> ExtractResponse:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/summarize")
-async def summarize_content(request: SummarizeRequest) -> SummarizeResponse:
+async def summarize_content(request: SummarizeRequest, rate_limit: Depends(check_rate_limit)) -> SummarizeResponse:
     logger.info("Summarize endpoint called")
 
     try:
@@ -284,7 +286,10 @@ async def summarize_content(request: SummarizeRequest) -> SummarizeResponse:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/analyze")
-async def analyze_url(url: str) -> AnalyzeResponse:
+async def analyze_url(
+    url: str, 
+    rate_limit: None = Depends(check_rate_limit)
+) -> AnalyzeResponse:
     logger.info(f"Analyze endpoint called for URL: {url}")
 
     try:
@@ -306,7 +311,7 @@ async def analyze_url(url: str) -> AnalyzeResponse:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/latest")
-async def get_latest_articles() -> LatestArticlesResponse:
+async def get_latest_articles(rate_limit: Depends(check_rate_limit)) -> LatestArticlesResponse:
     logger.info("Latest articles endpoint called")
     try:
         latest = cache.get_latest_articles(limit=10)
@@ -316,7 +321,7 @@ async def get_latest_articles() -> LatestArticlesResponse:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/preview/{encoded_url:path}", response_class=HTMLResponse)
-async def preview_page(encoded_url: str):
+async def preview_page(encoded_url: str, rate_limit: Depends(check_rate_limit)):
     try:
         # Decode the URL and validate it
         url = unquote(encoded_url)
@@ -390,6 +395,30 @@ def html_escape(text):
         text = str(text)
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(
         ">", "&gt;").replace('"', "&quot;").replace("'", "&#039;")
+
+class RateLimiter:
+    def __init__(self):
+        self.last_request_time = defaultdict(datetime.min)
+
+    async def check_rate_limit(self, client_ip: str):
+        now = datetime.now()
+        time_since_last_request = now - self.last_request_time[client_ip]
+        
+        if time_since_last_request < timedelta(seconds=60):
+            remaining_time = 60 - time_since_last_request.seconds
+            raise HTTPException(
+                status_code=429,
+                detail=f"Rate limit exceeded. Please try again later."
+            )
+        
+        self.last_request_time[client_ip] = now
+
+rate_limiter = RateLimiter()
+
+# Create a dependency
+async def check_rate_limit(request: Request):
+    client_ip = request.client.host
+    await rate_limiter.check_rate_limit(client_ip)
 
 if __name__ == "__main__":
     import uvicorn
