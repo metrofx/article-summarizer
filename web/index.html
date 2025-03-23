@@ -3,21 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smmryzr</title>
-
-    <!-- Dynamic OpenGraph meta tags -->
+    <title>Smmryzr - Article Summarizer</title>
+    
     <meta property="og:site_name" content="Smmryzr">
-    <meta id="ogTitle" property="og:title" content="Smmryzr - Article Summarizer">
-    <meta id="ogDesc" property="og:description" content="Extract content, metadata, and get AI summary from any URL">
-    <meta id="ogImage" property="og:image" content="">
-    <meta id="ogUrl" property="og:url" content="">
-
+    <meta property="og:title" content="Smmryzr - Article Summarizer">
+    <meta property="og:description" content="Extract content, metadata, and get AI summary from any URL">
+    
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="static/styles.css">
 </head>
-<body x-data="articleAnalyzer()" :class="theme">
+<body x-data="homeController()" :class="theme">
     <div class="container">
         <div style="text-align: center; margin-bottom: 20px;">
             <h1 style="margin-bottom: 30px; text-align: left;">
@@ -35,58 +31,21 @@
                     type="text" 
                     x-model="url" 
                     placeholder="Enter URL to extract and summarize" 
-                    @keyup.enter="analyzeArticle()"
+                    @keyup.enter="submitUrl()"
                     class="url-input"
                 >
             </div>
             <div class="button-container">
-                <button @click="analyzeArticle()" class="primary" :disabled="isLoading">
-                    <span x-show="!isLoading">Go</span>
-                    <span x-show="isLoading">Processing...</span>
+                <button @click="submitUrl()" class="primary">
+                    <span>Go</span>
                 </button>
             </div>
         </div>
 
-        <div x-show="error" class="error-card">
-            <div class="error-header">
-                <span class="error-icon">⚠️</span>
-                <span class="error-title">Error</span>
-            </div>
-            <div class="error-message" x-text="error"></div>
-        </div>
-
-        <div x-show="metadata" class="metadata-container" x-html="metadata"></div>
-
-        <div x-show="hasResults" class="tabs-container">
-            <div class="tab-nav">
-                <button 
-                    @click="activeTab = 'summary'" 
-                    :class="{'selected': activeTab === 'summary'}"
-                >Summary</button>
-                <button 
-                    @click="activeTab = 'content'" 
-                    :class="{'selected': activeTab === 'content'}"
-                >Full Content</button>
-            </div>
-            
-            <div x-show="activeTab === 'summary'" class="summary-container">
-                <div class="article-summary" x-html="summary"></div>
-            </div>
-            
-            <div x-show="activeTab === 'content'" class="content-container">
-                <div class="article-content" x-html="fullText"></div>
-            </div>
-        </div>
-
-        <div x-show="permalink" class="permalink-container">
-            <span style="color: var(--muted-text);">Permalink: </span>
-            <a :href="permalink" style="color: var (--accent-color);" x-text="permalink"></a>
-        </div>
-
-        <div x-show="!url && latestArticles.length > 0" class="latest-articles">
-            <h2 class="latest-heading" style="text-align: left;">📰 Latest</h2>
+        <div x-show="latestArticles.length > 0" class="latest-articles">
+            <h2 class="latest-heading">📰 Latest</h2>
             <template x-for="article in latestArticles" :key="article.url">
-                <div class="metadata-card" @click="url = article.url; analyzeArticle()">
+                <div class="metadata-card" @click="goToRead(article.url)">
                     <div class="metadata-content">
                         <div class="metadata-text">
                             <p class="site-name" x-text="article.siteName"></p>
@@ -105,11 +64,6 @@
 
         <div class="footer">
             <div class="footer-controls" style="font-size:medium;">
-                <button @click="window.location.href='/'" 
-                        class="nav-button" 
-                        aria-label="Go to home page">
-                    <span>🏠</span>
-                </button>
                 <button @click="window.scrollTo({top: 0, behavior: 'smooth'})"
                         class="nav-button"
                         aria-label="Scroll to top">
@@ -126,7 +80,51 @@
             </p>
         </div>
     </div>
-
-    <script src="static/app.js"></script>
+    <script>
+    function homeController() {
+        return {
+            url: '',
+            theme: localStorage.getItem('theme') || 'light-mode',
+            latestArticles: [],
+            
+            init() {
+                this.$watch('theme', value => {
+                    localStorage.setItem('theme', value);
+                    document.body.className = value;
+                });
+                document.body.className = this.theme;
+                this.loadLatestArticles();
+            },
+            
+            submitUrl() {
+                if (this.url) {
+                    window.location.href = `/read.html?url=${encodeURIComponent(this.url)}`;
+                }
+            },
+            
+            goToRead(url) {
+                window.location.href = `/read.html?url=${encodeURIComponent(url)}`;
+            },
+            
+            loadLatestArticles() {
+                fetch('/api/latest')
+                    .then(response => response.ok ? response.json() : Promise.reject(response))
+                    .then(data => {
+                        this.latestArticles = data.articles.map(article => {
+                            const og = article.metadata;
+                            return {
+                                url: article.url,
+                                title: og.title || 'No title available',
+                                description: og.description || 'No description available',
+                                image: og.image || '',
+                                siteName: og.site_name || ''
+                            };
+                        });
+                    })
+                    .catch(error => console.error('Error loading latest articles:', error));
+            }
+        };
+    }
+    </script>
 </body>
 </html>

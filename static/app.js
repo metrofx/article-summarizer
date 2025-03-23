@@ -56,7 +56,6 @@ function articleAnalyzer() {
                 })
                 .then(data => {
                     this.processData(data);
-                    this.updatePermalink();
                     this.hasResults = true;
                 })
                 .catch(error => {
@@ -73,6 +72,8 @@ function articleAnalyzer() {
         },
 
         processData(data) {
+            console.group('Processing Article Data');
+            
             // Extract metadata for display
             const og = data.og_metadata;
             const title = og.title || 'No title available';
@@ -80,14 +81,51 @@ function articleAnalyzer() {
             const image = og.image || '';
             const siteName = og.site_name || '';
 
-            // Update OpenGraph meta tags
-            document.getElementById('ogTitle').setAttribute('content', title);
-            document.getElementById('ogDesc').setAttribute('content', description);
-            document.getElementById('ogImage').setAttribute('content', image);
-            document.getElementById('ogUrl').setAttribute('content', window.location.href);
+            console.log('Extracted OG Data:', { title, description, image, siteName });
+
+            // Update permalink first
+            this.updatePermalink();
+            console.log('Updated Permalink:', this.permalink);
+
+            // Enhanced updateMetaTag with logging
+            const updateMetaTag = (property, content) => {
+                console.log(`Updating ${property}:`, content);
+                const meta = document.querySelector(`meta[property="${property}"]`);
+                if (meta) {
+                    const oldContent = meta.getAttribute('content');
+                    meta.setAttribute('content', content);
+                    console.log(`- Updated existing tag. Old: "${oldContent}" → New: "${content}"`);
+                } else {
+                    const newMeta = document.createElement('meta');
+                    newMeta.setAttribute('property', property);
+                    newMeta.setAttribute('content', content);
+                    document.head.appendChild(newMeta);
+                    console.log(`- Created new meta tag with content: "${content}"`);
+                }
+                
+                // Verify update
+                const verifyMeta = document.querySelector(`meta[property="${property}"]`);
+                console.log(`- Verification - Current content: "${verifyMeta?.getAttribute('content')}"`);
+            };
+
+            // Update each meta tag
+            updateMetaTag('og:title', this.escapeHtml(title));
+            updateMetaTag('og:description', this.escapeHtml(description));
+            updateMetaTag('og:image', encodeURI(image));
+            updateMetaTag('og:url', this.permalink);
+            updateMetaTag('og:site_name', this.escapeHtml(siteName));
+
+            // Verify all meta tags after updates
+            console.log('Final Meta Tags State:');
+            document.querySelectorAll('meta[property^="og:"]').forEach(meta => {
+                console.log(`${meta.getAttribute('property')}: "${meta.getAttribute('content')}"`);
+            });
 
             // Update page title
             document.title = `Smmryzr - ${this.escapeHtml(title)}`;
+            console.log('Updated page title:', document.title);
+
+            console.groupEnd();
 
             // Create metadata card HTML
             this.metadata = `

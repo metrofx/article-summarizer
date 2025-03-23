@@ -23,9 +23,9 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 # Log environment variables for debugging
-logger.info("Environment variables:")
-logger.info(f"ALLOWED_HOSTS env: {os.getenv('ALLOWED_HOSTS')}")
-logger.info(f"ALLOWED_IPS env: {os.getenv('ALLOWED_IPS')}")
+# logger.info("Environment variables:")
+# logger.info(f"ALLOWED_HOSTS env: {os.getenv('ALLOWED_HOSTS')}")
+# logger.info(f"ALLOWED_IPS env: {os.getenv('ALLOWED_IPS')}")
 
 # Get allowed hosts and IPs from environment variables with better error handling
 def parse_ip_networks(ip_list: str) -> list:
@@ -167,7 +167,7 @@ async def summarize_text(text: str) -> str:
         "Content-Type": "application/json"
     }
 
-    prompt = f"""Summarize article text surrounded by <content> </content> tags into  structured key ideas, making it easy to read and comprehend. Determine the content language in it but don't mention it. Only respond in Bahasa Indonesia if you detect Indonesian language in it. Otherwise, always respond in English. The answer should be concise, clear, and capture the main points of the content. Start the response directly without any preamble or introductory statements. Do not inform that it's a summary. End with important quote taken from the article that is unique and capture attention.
+    prompt = f"""Summarize article text surrounded by <content> </content> tags into  structured key ideas, making it easy to read and comprehend. Determine the content language in it but don't mention it. Only respond in Bahasa Indonesia if you detect article is in Bahasa Indonesia. Otherwise, always respond in English. The answer should be concise, clear, and capture the main points of the content. Start the response directly without any preamble or introductory statements. Do not inform that it's a summary. End with important quote taken from the article that is unique and capture attention.
 <content>
 {text}
 </content>
@@ -307,7 +307,7 @@ async def analyze_url(url: str) -> AnalyzeResponse:
 async def get_latest_articles() -> LatestArticlesResponse:
     logger.info("Latest articles endpoint called")
     try:
-        latest = cache.get_latest_articles(limit=5)
+        latest = cache.get_latest_articles(limit=10)
         return LatestArticlesResponse(articles=latest)
     except Exception as e:
         logger.error(f"Error fetching latest articles: {str(e)}")

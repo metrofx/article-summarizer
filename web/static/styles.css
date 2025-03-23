@@ -1,0 +1,446 @@
+/* Light mode variables */
+body.light-mode {
+    --bg-color: #ffffff;
+    --text-color: #333333;
+    --card-bg: #ffffff;
+    --card-shadow: rgba(0,0,0,0.1);
+    --accent-color: #4a6cf7;
+    --secondary-bg: #f8f9ff;
+    --border-color: #eaeaea;
+    --error-bg: #fff0f0;
+    --error-color: #e74c3c;
+    --muted-text: #666666;
+}
+
+/* Dark mode variables */
+body.dark-mode {
+    --bg-color: #1a1a1a;
+    --text-color: #f0f0f0;
+    --card-bg: #2d2d2d;
+    --card-shadow: rgba(0,0,0,0.3);
+    --accent-color: #738aff;
+    --secondary-bg: #252836;
+    --border-color: #444444;
+    --error-bg: #3d2525;
+    --error-color: #ff6b6b;
+    --muted-text: #bbbbbb;
+}
+
+/* Base styles */
+body {
+    font-family: 'Merriweather', Georgia, serif;
+    margin: 0;
+    padding: 20px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Input area */
+.input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.url-input-container {
+    flex: 1 1 300px;
+}
+
+.button-container {
+    flex: 0 0 120px;
+}
+
+.url-input {
+    width: 95%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+button.primary {
+    background-color: var(--accent-color);
+    color: white;
+    font-weight: 700;
+    width: 100%;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Metadata card */
+.metadata-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.metadata-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--card-shadow);
+}
+
+.metadata-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+}
+
+.metadata-text {
+    flex: 1;
+}
+
+.metadata-content h3 {
+    margin: 0 0 4px 0;
+    color: var(--text-color);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.site-name {
+    color: var(--muted-text);
+    font-size: 13px;
+    font-weight: 500;
+    margin: 0 0 12px 0;
+}
+
+.description {
+    color: var(--muted-text);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.metadata-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.metadata-footer img {
+    /* width: 300px; */
+    /* height: 200px; */
+    width: 95%;
+    margin-top: 2px;
+    border-radius: 4px;
+}
+
+@media (min-width: 768px) {
+    .metadata-content {
+        flex-direction: row;
+        gap: 24px;
+        padding: 0;
+    }
+    
+    .metadata-text {
+        padding: 24px;
+    }
+    
+    .metadata-footer {
+        padding: 24px 0 24px 24px;
+        border-top: none;
+    }
+    
+    .metadata-image {
+        flex: 0 0 300px;
+        height: 100%;
+        min-height: 200px;
+    }
+    
+    .metadata-footer img {
+        width: 300px;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 0;
+    }
+}
+
+/* Add responsive layout for desktop */
+@media (min-width: 768px) {
+    .metadata-content {
+        display: flex;
+        gap: 20px;
+        align-items: start;
+    }
+    
+    .metadata-text {
+        flex: 1;
+    }
+    
+    .metadata-footer {
+        flex: 0 0 200px;
+        border-top: none;
+        margin-top: 0;
+        padding-top: 0;
+        flex-direction: column;
+    }
+    
+    .metadata-footer img {
+        width: 180px;
+        height: 140px;
+        margin-top: 22px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+}
+
+/* Tabs */
+.tabs-container {
+    margin-bottom: 20px;
+}
+
+.tab-nav {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.tab-nav button {
+    background: none;
+    border: none;
+    padding: 10px 15px;
+    font-weight: 400;
+    font-size: 16px;
+    color: var(--text-color);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-nav button.selected {
+    font-weight: 700;
+    color: var(--accent-color);
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.content-container {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px var(--card-shadow);
+    margin-bottom: 20px;
+}
+
+.summary-container {
+    background-color: var(--secondary-bg);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px var(--card-shadow);
+    /* border-left: 4px solid var(--accent-color); */
+}
+
+/* Article content styling */
+.article-content, .article-summary {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text-color);
+}
+
+/* Markdown content styling */
+.article-content h1, .article-summary h1 {
+    font-size: 1.8em;
+    margin: 1em 0 0.5em;
+}
+
+.article-content h2, .article-summary h2 {
+    font-size: 1.5em;
+    margin: 1em 0 0.5em;
+}
+
+.article-content p, .article-summary p {
+    margin: 0.8em 0;
+}
+
+.article-content ul, .article-summary ul,
+.article-content ol, .article-summary ol {
+    margin: 0.8em 0;
+    padding-left: 2em;
+}
+
+.article-content code, .article-summary code {
+    background: var(--secondary-bg);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.article-content pre, .article-summary pre {
+    background: var(--secondary-bg);
+    padding: 1em;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.article-content blockquote, .article-summary blockquote {
+    border-left: 3px solid var(--accent-color);
+    margin: 1em 0;
+    padding-left: 1em;
+    color: var(--muted-text);
+}
+
+/* Enhanced error card styling */
+.error-card {
+    background-color: var(--error-bg);
+    color: var(--error-color);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid var(--error-color);
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.error-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.error-icon {
+    margin-right: 8px;
+}
+
+.error-title {
+    font-size: 16px;
+}
+
+.error-message {
+    color: var(--text-color);
+    line-height: 1.5;
+    margin-left: 24px;
+}
+
+/* Permalink */
+.permalink-container {
+    margin: 10px 0 20px;
+    font-size: 12px;
+}
+
+/* Accordion */
+.accordion {
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.accordion-header {
+    padding: 12px 16px;
+    background-color: var(--card-bg);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.accordion-content {
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--secondary-bg);
+}
+
+.theme-toggle {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    color: var(--muted-text);
+    font-size: 0.6em;
+}
+
+.footer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.theme-button,
+.nav-button {
+    background: none;
+    border: none;
+    padding: 0 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+    vertical-align: middle;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.theme-button:hover,
+.nav-button:hover {
+    opacity: 1;
+}
+
+/* Add this after the base styles section */
+a {
+    color: #4a6cf7;  /* Default link color for light mode */
+    text-decoration: none;
+}
+
+body.dark-mode a {
+    color: #738aff;  /* Link color for dark mode */
+}
+
+/* Add this at the end of the file */
+.latest-articles {
+    margin: 40px 0;
+}
+
+.latest-heading {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    color: var(--text-color);
+    text-align: left;
+}
+
+.latest-articles .metadata-card {
+    margin-bottom: 20px;
+}
+
+.latest-articles .metadata-card:last-child {
+    margin-bottom: 0;
+}

@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smmryzr</title>
+    <title>Loading...</title>
 
     <!-- Dynamic OpenGraph meta tags -->
     <meta property="og:site_name" content="Smmryzr">
-    <meta id="ogTitle" property="og:title" content="Smmryzr - Article Summarizer">
-    <meta id="ogDesc" property="og:description" content="Extract content, metadata, and get AI summary from any URL">
-    <meta id="ogImage" property="og:image" content="">
-    <meta id="ogUrl" property="og:url" content="">
+    <meta property="og:title" content="Loading...">
+    <meta property="og:description" content="Loading article...">
+    <meta property="og:image" content="">
+    <meta property="og:url" content="">
 
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="static/styles.css">
 </head>
-<body x-data="articleAnalyzer()" :class="theme">
+<body x-data="articleReader()" :class="theme">
     <div class="container">
         <div style="text-align: center; margin-bottom: 20px;">
             <h1 style="margin-bottom: 30px; text-align: left;">
@@ -29,30 +29,16 @@
                      Smmryzr</h1>
         </div>
 
-        <div class="input-row">
-            <div class="url-input-container">
-                <input 
-                    type="text" 
-                    x-model="url" 
-                    placeholder="Enter URL to extract and summarize" 
-                    @keyup.enter="analyzeArticle()"
-                    class="url-input"
-                >
-            </div>
-            <div class="button-container">
-                <button @click="analyzeArticle()" class="primary" :disabled="isLoading">
-                    <span x-show="!isLoading">Go</span>
-                    <span x-show="isLoading">Processing...</span>
-                </button>
-            </div>
-        </div>
-
         <div x-show="error" class="error-card">
             <div class="error-header">
                 <span class="error-icon">⚠️</span>
                 <span class="error-title">Error</span>
             </div>
             <div class="error-message" x-text="error"></div>
+        </div>
+
+        <div x-show="isLoading" class="loading">
+            <p>Analyzing article...</p>
         </div>
 
         <div x-show="metadata" class="metadata-container" x-html="metadata"></div>
@@ -78,31 +64,6 @@
             </div>
         </div>
 
-        <div x-show="permalink" class="permalink-container">
-            <span style="color: var(--muted-text);">Permalink: </span>
-            <a :href="permalink" style="color: var (--accent-color);" x-text="permalink"></a>
-        </div>
-
-        <div x-show="!url && latestArticles.length > 0" class="latest-articles">
-            <h2 class="latest-heading" style="text-align: left;">📰 Latest</h2>
-            <template x-for="article in latestArticles" :key="article.url">
-                <div class="metadata-card" @click="url = article.url; analyzeArticle()">
-                    <div class="metadata-content">
-                        <div class="metadata-text">
-                            <p class="site-name" x-text="article.siteName"></p>
-                            <h3 x-text="article.title"></h3>
-                            <p class="description" x-text="article.description"></p>
-                        </div>
-                        <div class="metadata-footer">
-                            <template x-if="article.image">
-                                <img :src="article.image" alt="Article image">
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </div>
-
         <div class="footer">
             <div class="footer-controls" style="font-size:medium;">
                 <button @click="window.location.href='/'" 
@@ -126,7 +87,6 @@
             </p>
         </div>
     </div>
-
-    <script src="static/app.js"></script>
+    <script src="static/reader.js"></script>
 </body>
 </html>
