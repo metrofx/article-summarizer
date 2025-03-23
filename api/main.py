@@ -15,7 +15,7 @@ import json
 from db import Cache
 import logging
 from fastapi.responses import HTMLResponse
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse  # Add urlparse import
 
 # Load environment variables
 load_dotenv(verbose=True)  # Add verbose=True for debugging
@@ -318,42 +318,78 @@ async def get_latest_articles() -> LatestArticlesResponse:
 @app.get("/preview/{encoded_url:path}", response_class=HTMLResponse)
 async def preview_page(encoded_url: str):
     try:
-        # Decode the URL
+        # Decode the URL and validate it
         url = unquote(encoded_url)
+        
+        # Fix URLs with single slash after scheme
+        if url.startswith('http:/') and not url.startswith('http://'):
+            url = url.replace('http:/', 'http://', 1)
+        if url.startswith('https:/') and not url.startswith('https://'):
+            url = url.replace('https:/', 'https://', 1)
+        
+        # Validate URL format
+        parsed = urlparse(url)
+        if not all([parsed.scheme, parsed.netloc]):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid URL format: {url}"
+            )
+            
+        # Ensure scheme is http or https
+        if parsed.scheme not in ['http', 'https']:
+            url = f"https://{parsed.netloc}{parsed.path}"
+            if parsed.query:
+                url += f"?{parsed.query}"
         
         # Process the URL to get metadata and content
         result = await process_url(url)
         
         og_metadata = result["og_metadata"]
         summary = result["summary"]
+
+        # Create the redirect URL to read.html
+        read_url = f"/read.html?url={html_escape(url)}"
         
-        # Create HTML with proper Open Graph tags
+        # Create HTML with proper Open Graph tags and escaped content
         html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>{og_metadata.get('title', 'Article Preview')}</title>
+    <title>{html_escape(og_metadata.get('title', 'Article Preview'))}</title>
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="{og_metadata.get('title', 'Article Preview')}">
-    <meta property="og:description" content="{og_metadata.get('description', summary[:200] + '...' if len(summary) > 200 else summary)}">
-    <meta property="og:image" content="{og_metadata.get('image', '')}">
-    <meta property="og:url" content="{url}">
+    <meta property="og:title" content="{html_escape(og_metadata.get('title', 'Article Preview'))}">
+    <meta property="og:description" content="{html_escape(og_metadata.get('description', summary[:200] + '...' if len(summary) > 200 else summary))}">
+    <meta property="og:image" content="{html_escape(og_metadata.get('image', ''))}">
+    <meta property="og:url" content="{html_escape(url)}">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Smmryzr">
     
-    <!-- Redirect to the actual article -->
-    <meta http-equiv="refresh" content="0;url={url}">
+    <!-- Redirect to read.html -->
+    <meta http-equiv="refresh" content="0;url={read_url}">
 </head>
 <body>
-    <p>Redirecting to article...</p>
+    <p>Redirecting to summary...</p>
 </body>
 </html>"""
         
         return HTMLResponse(content=html)
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Preview generation error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating preview: {str(e)}"
+        )
+
+# Add this helper function at the top of the file with other imports
+def html_escape(text):
+    """Escape HTML special characters in text."""
+    if not isinstance(text, str):
+        text = str(text)
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(
+        ">", "&gt;").replace('"', "&quot;").replace("'", "&#039;")
 
 if __name__ == "__main__":
     import uvicorn
