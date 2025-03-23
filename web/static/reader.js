@@ -138,11 +138,22 @@ function articleReader() {
                 
                 const previewUrl = `${window.location.origin}/preview/${encodeURIComponent(articleUrl)}`;
                 
-                await navigator.clipboard.writeText(previewUrl);
-                alert('Share link copied to clipboard!');
+                // Check if device is mobile
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                
+                if (isMobile && navigator.share) {
+                    await navigator.share({
+                        title: document.title,
+                        text: 'Read this article on Smmryzr!',
+                        url: previewUrl
+                    });
+                } else {
+                    await navigator.clipboard.writeText(previewUrl);
+                    alert('Share link copied to clipboard!');
+                }
             } catch (err) {
                 console.error('Error sharing:', err);
-                alert('Error copying share link. Please try again.');
+                alert('Error sharing. Please try again.');
             }
         }
     };
