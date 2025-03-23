@@ -363,7 +363,7 @@ async def preview_page(encoded_url: str):
     <meta property="og:image" content="{html_escape(og_metadata.get('image', ''))}">
     <meta property="og:url" content="{html_escape(url)}">
     <meta property="og:type" content="article">
-    <meta property="og:site_name" content="Smmryzr">
+    <meta property="og:site_name" content="{html_escape(og_metadata.get('site_name', 'Smmryzr'))}">
     
     <!-- Redirect to read.html -->
     <meta http-equiv="refresh" content="0;url={read_url}">
