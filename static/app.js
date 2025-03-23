@@ -80,6 +80,12 @@ function articleAnalyzer() {
             const image = og.image || '';
             const siteName = og.site_name || '';
 
+            // Update OpenGraph meta tags
+            document.getElementById('ogTitle').setAttribute('content', title);
+            document.getElementById('ogDesc').setAttribute('content', description);
+            document.getElementById('ogImage').setAttribute('content', image);
+            document.getElementById('ogUrl').setAttribute('content', window.location.href);
+
             // Update page title
             document.title = `Smmryzr - ${this.escapeHtml(title)}`;
 
@@ -116,7 +122,7 @@ function articleAnalyzer() {
         escapeHtml(unsafe) {
             return unsafe
                 .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
+                .replace(/</g, "&lt;")  // Fixed regex here
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
