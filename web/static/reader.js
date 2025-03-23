@@ -138,20 +138,11 @@ function articleReader() {
                 
                 const previewUrl = `${window.location.origin}/preview/${encodeURIComponent(articleUrl)}`;
                 
-                if (navigator.share) {
-                    // Use Web Share API if available
-                    await navigator.share({
-                        title: document.title,
-                        url: previewUrl
-                    });
-                } else {
-                    // Fallback to copying to clipboard
-                    await navigator.clipboard.writeText(previewUrl);
-                    alert('Share link copied to clipboard!');
-                }
+                await navigator.clipboard.writeText(previewUrl);
+                alert('Share link copied to clipboard!');
             } catch (err) {
                 console.error('Error sharing:', err);
-                alert('Error sharing article. Please try again.');
+                alert('Error copying share link. Please try again.');
             }
         }
     };
