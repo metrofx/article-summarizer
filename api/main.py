@@ -178,7 +178,9 @@ async def summarize_text(text: str) -> str:
 """
 
     data = {
-        "model": "amazon/nova-micro-v1",  # Replace with a valid model name, default openai/gpt-4o-mini
+        "model": "meta-llama/llama-3.3-70b-instruct",  
+        # Replace with a valid model name, default openai/gpt-4o-mini
+        # - amazon/nova-micro-v1
         "messages": [
             {"role": "user", "content": prompt}
         ]
