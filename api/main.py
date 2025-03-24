@@ -171,7 +171,7 @@ async def summarize_text(text: str) -> str:
         "Content-Type": "application/json"
     }
 
-    prompt = f"""Summarize article text surrounded by <content> </content> tags into  structured key ideas, making it easy to read and comprehend. Determine the content language in it but don't mention it. Only respond in Bahasa Indonesia if you detect article is in Bahasa Indonesia. Otherwise, always respond in English. The answer should be concise, clear, and capture the main points of the content. Start the response directly without any preamble or introductory statements. Do not inform that it's a summary. End with important quote taken from the article that is unique and capture attention.
+    prompt = f"""Summarize article text surrounded by <content> </content> tags into beautiful markdown formatted and structured key ideas, making it easy to read and comprehend. Determine the content language in it but don't mention it. Only respond in Bahasa Indonesia if content text is in Bahasa Indonesia. Otherwise, always respond in English. The answer should be concise, clear, and capture the important points of the content. Respond directly without any preamble or introductory statements. Do not inform that it's a summary. End with important quote taken from the article that is unique and capture attention.
 <content>
 {text}
 </content>
@@ -343,9 +343,7 @@ async def analyze_url(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/latest")
-async def get_latest_articles(
-    _: None = Depends(check_rate_limit)
-) -> LatestArticlesResponse:
+async def get_latest_articles() -> LatestArticlesResponse:
     logger.info("Latest articles endpoint called")
     try:
         latest = cache.get_latest_articles(limit=10)
@@ -355,10 +353,7 @@ async def get_latest_articles(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/preview/{encoded_url:path}", response_class=HTMLResponse)
-async def preview_page(
-    encoded_url: str,
-    _: None = Depends(check_rate_limit)
-):
+async def preview_page(encoded_url: str):
     try:
         # Decode the URL and validate it
         url = unquote(encoded_url)
