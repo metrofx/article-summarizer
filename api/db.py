@@ -84,6 +84,8 @@ class Cache:
                 SELECT url, og_metadata, created_at
                 FROM article_cache
                 WHERE og_metadata IS NOT NULL
+                AND json_extract(og_metadata, '$.title') IS NOT NULL
+                AND json_extract(og_metadata, '$.image') IS NOT NULL
                 ORDER BY created_at DESC
                 LIMIT ?
             """, [limit]).fetchall()
