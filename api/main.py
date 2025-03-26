@@ -174,11 +174,11 @@ async def summarize_text(text: str) -> str:
     }
 
     prompt = f"""Analyze the language of the text between <content> </content> tags. 
-    
+
     - If the text is primarily in Indonesian, provide your summary IN INDONESIAN. 
     - If the text is in any other language, provide your summary in English.
 
-    Summarize the content into structured key ideas, making it easy to comprehend. The summary should be concise, clear, and capture the main points. Start directly without any preamble. Do not mention that it's a summary. End with an important quote from the article that captures attention.
+    Summarize the content into structured key ideas, making it easy to comprehend. The summary should be concise, clear, and capture the main points. Start directly without any preamble. Do not point or mention that it's a summary or key points. End with an important quote from the article that captures attention.
 
     <content>
     {text}
