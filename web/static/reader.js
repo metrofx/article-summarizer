@@ -9,6 +9,8 @@ function articleReader() {
         activeTab: 'summary',
         theme: localStorage.getItem('theme') || 'light-mode',
         hasResults: false,
+        showToast: false,
+        toastMessage: '',
 
         init() {
             this.$watch('theme', value => {
@@ -149,11 +151,23 @@ function articleReader() {
                     });
                 } else {
                     await navigator.clipboard.writeText(previewUrl);
-                    alert('Share link copied to clipboard!');
+                    this.showToast = true;
+                    this.toastMessage = 'Share link copied to clipboard!';
+
+                    // Hide toast after 3 seconds
+                    setTimeout(() => {
+                        this.showToast = false;
+                    }, 3000);
                 }
             } catch (err) {
                 console.error('Error sharing:', err);
-                alert('Error sharing. Please try again.');
+                this.showToast = true;
+                this.toastMessage = 'Error sharing. Please try again.';
+
+                // Hide toast after 3 seconds
+                setTimeout(() => {
+                    this.showToast = false;
+                }, 3000);
             }
         }
     };

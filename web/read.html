@@ -13,6 +13,7 @@
     <meta property="og:url" content="">
 
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="static/styles.css">
@@ -90,6 +91,28 @@
             <p>Extract content, metadata, and get AI summary from any URL
             <br>Donate: <a href="https://saweria.co/xfortem">Saweria</a>
             </p>
+        </div>
+    </div>
+    <div
+        x-show="showToast"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform translate-y-2"
+        x-transition:enter-end="opacity-100 transform translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform translate-y-0"
+        x-transition:leave-end="opacity-0 transform translate-y-2"
+        class="fixed bottom-5 right-5 max-w-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-50 flex items-center"
+    >
+        <div class="w-2 h-full bg-green-500 self-stretch"></div>
+        <div class="flex items-center p-3">
+            <div class="mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <div>
+                <p class="font-medium text-gray-800 dark:text-gray-200" x-text="toastMessage"></p>
+            </div>
         </div>
     </div>
     <script src="static/reader.js"></script>
