@@ -41,7 +41,7 @@
             <p>Analyzing article...</p>
         </div>
 
-        <div x-show="metadata" class="metadata-container" x-html="metadata"></div>
+        <div x-show="metadata" class="metadata-container" x-html="metadata" @click="activeTab = 'content'" style="cursor: pointer;" title="Click to view full content"></div>
 
         <div x-show="hasResults" class="tabs-container">
             <div class="tab-nav">
