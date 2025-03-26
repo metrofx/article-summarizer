@@ -45,12 +45,14 @@ def parse_ip_networks(ip_list: str) -> list:
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 ALLOWED_IPS = parse_ip_networks(os.getenv("ALLOWED_IPS", "127.0.0.1/32"))
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct")
 
 # Print configuration at startup
 logger.info("=== API Configuration ===")
 logger.info(f"Allowed Hosts: {ALLOWED_HOSTS}")
 logger.info(f"Allowed IPs: {[str(n) for n in ALLOWED_IPS]}")
 logger.info(f"OpenRouter API Key configured: {'Yes' if OPENROUTER_API_KEY else 'No'}")
+logger.info(f"OpenRouter Model: {OPENROUTER_MODEL}")
 logger.info("=====================")
 
 app = FastAPI()
@@ -178,9 +180,7 @@ async def summarize_text(text: str) -> str:
 """
 
     data = {
-        "model": "meta-llama/llama-3.3-70b-instruct",  
-        # Replace with a valid model name, default openai/gpt-4o-mini
-        # - amazon/nova-micro-v1
+        "model": OPENROUTER_MODEL,
         "messages": [
             {"role": "user", "content": prompt}
         ]
