@@ -173,10 +173,16 @@ async def summarize_text(text: str) -> str:
         "Content-Type": "application/json"
     }
 
-    prompt = f"""Summarize article text surrounded by <content> </content> tags into beautiful markdown formatted and structured key ideas, making it easy to read and comprehend. Determine the content language in it but don't mention it. Only respond in Bahasa Indonesia if content text is in Bahasa Indonesia. Otherwise, always respond in English. The answer should be concise, clear, and capture the important points of the content. Respond directly without any preamble or introductory statements. Do not inform that it's a summary. End with important quote taken from the article that is unique and capture attention.
-<content>
-{text}
-</content>
+    prompt = f"""Analyze the language of the text between <content> </content> tags. 
+    
+    - If the text is primarily in Indonesian, provide your summary IN INDONESIAN. 
+    - If the text is in any other language, provide your summary in English.
+
+    Summarize the content into structured key ideas, making it easy to comprehend. The summary should be concise, clear, and capture the main points. Start directly without any preamble. Do not mention that it's a summary. End with an important quote from the article that captures attention.
+
+    <content>
+    {text}
+    </content>
 """
 
     data = {
