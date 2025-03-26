@@ -79,7 +79,7 @@ class IPRestrictionMiddleware(BaseHTTPMiddleware):
                 return JSONResponse(
                     status_code=403,
                     content={
-                        "detail": f"Access denied. IP {client_ip} not in allowed networks: {[str(n) for n in ALLOWED_IPS]}"
+                        "detail": f"Access denied."
                     }
                 )
         except ValueError:
