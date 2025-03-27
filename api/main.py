@@ -173,10 +173,9 @@ async def summarize_text(text: str) -> str:
         "Content-Type": "application/json"
     }
 
-    prompt = f"""Analyze the language of the text between <content> </content> tags. 
-
-    - If the text is primarily in Indonesian, provide your summary IN INDONESIAN. 
-    - If the text is in any other language, provide your summary in English.
+    prompt = f"""First, determine the primary language of the text between <content> </content> tags:
+    - If the text contains Indonesian words like "yang", "dan", "untuk", "dengan", "ini", "adalah", "dari", or "pada" AND these words appear frequently, respond ENTIRELY IN INDONESIAN.
+    - Otherwise, respond ENTIRELY IN ENGLISH.
 
     Summarize the content into structured key ideas, making it easy to comprehend. The summary should be concise, clear, and capture the main points. Start directly without any preamble. Do not point or mention that it's a summary or key points. End with an important quote from the article that captures attention.
 
