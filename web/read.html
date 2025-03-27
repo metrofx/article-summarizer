@@ -83,9 +83,13 @@
                     <span x-text="theme === 'light-mode' ? '🌙' : '☀️'"></span>
                 </button>
                 <button @click="shareArticle()" 
-                        class="nav-button"
+                        class="nav-button relative group"
                         aria-label="Share article">
-                    <span>📤</span>
+                    <span>🔗</span>
+                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-black bg-opacity-80 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                        Share this article
+                        <span class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-black border-opacity-80"></span>
+                    </span>
                 </button>
             </div>
             <p>Extract content, metadata, and get AI summary from any URL
