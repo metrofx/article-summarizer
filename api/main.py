@@ -18,6 +18,7 @@ from fastapi.responses import HTMLResponse
 from urllib.parse import unquote, urlparse  # Add urlparse import
 from datetime import datetime, timedelta
 from collections import defaultdict
+import langid
 
 # Load environment variables
 load_dotenv(verbose=True)  # Add verbose=True for debugging
@@ -25,6 +26,10 @@ load_dotenv(verbose=True)  # Add verbose=True for debugging
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+# Define default model and get from env
+DEFAULT_MODEL = "meta-llama/llama-3.3-70b-instruct"
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", DEFAULT_MODEL)
 
 # Log environment variables for debugging
 # logger.info("Environment variables:")
@@ -45,7 +50,6 @@ def parse_ip_networks(ip_list: str) -> list:
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 ALLOWED_IPS = parse_ip_networks(os.getenv("ALLOWED_IPS", "127.0.0.1/32"))
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct")
 
 # Print configuration at startup
 logger.info("=== API Configuration ===")
@@ -173,9 +177,11 @@ async def summarize_text(text: str) -> str:
         "Content-Type": "application/json"
     }
 
-    prompt = f"""First, determine the primary language of the text between <content> </content> tags:
-    - If the text contains Indonesian words like "yang", "dan", "untuk", "dengan", "ini", "adalah", "dari", or "pada" AND these words appear frequently, respond ENTIRELY IN INDONESIAN.
-    - Otherwise, respond ENTIRELY IN ENGLISH.
+    # Detect language using py3langid
+    lang, _ = langid.classify(text)
+    response_language = "INDONESIAN" if lang == "id" else "ENGLISH"
+
+    prompt = f"""Respond ENTIRELY IN {response_language}.
 
     Summarize the content into structured key ideas, making it easy to comprehend. The summary should be concise, clear, and capture the main points. Start directly without any preamble. Do not point or mention that it's a summary or key points. End with an important quote from the article that captures attention.
 
